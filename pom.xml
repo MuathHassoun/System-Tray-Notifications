@@ -79,16 +79,6 @@
         <artifactId>jide-oss</artifactId>
         <version>3.5.4</version>
     </dependency>
-    <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20250107</version>
-    </dependency>
-    <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.18.2</version>
-    </dependency>
   </dependencies>
 
   <build>
