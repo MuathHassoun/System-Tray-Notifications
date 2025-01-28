@@ -16,6 +16,20 @@
     <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
+  <distributionManagement>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/MuathHassoun/System-Tray-Notifications</url>
+    </repository>
+  </distributionManagement>
+  
+  <pluginRepositories>
+      <pluginRepository>
+          <id>github</id>
+          <url>https://maven.pkg.github.com</url>
+      </pluginRepository>
+  </pluginRepositories>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
