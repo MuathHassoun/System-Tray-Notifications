@@ -7,6 +7,7 @@ import com.notifications.system_tray_notifications.influence.PlaySounds;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import java.awt.*;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.Timer;
 
@@ -38,6 +39,11 @@ public class SystemTrayNotification{
      * It is initialized in the `Tray` method and is used to display notifications and the associated popup menu.
      */
     private static TrayIcon trayIcon;
+
+    /**
+     * The Swing Timer instance.
+     */
+    private static Timer timer;
 
     /**
      * Initializes and displays a system tray notification with customizable options.
@@ -106,13 +112,84 @@ public class SystemTrayNotification{
      * @param isRepeating A boolean value indicating whether the notification should repeat
      */
     private static void setupSystemTray(AlarmSounds alarm_object, String title, String message, int duration, boolean isRepeating) {
-        Timer timer = new Timer(duration,
+        timer = new Timer(duration,
         e -> {
             PlaySounds.playSound(alarm_object.getSoundFileName());
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
         });
         timer.setRepeats(isRepeating);
         timer.start();
+    }
+
+    /**
+     * Initializes the timer with a given delay, repetition mode, and action listener.
+     * If the timer is already initialized, it stops and reinitialized it.
+     *
+     * @param delay        The delay in milliseconds between action events.
+     * @param isRepeating  {@code true} if the timer should repeat, {@code false} if it should fire only once.
+     * @param listener     The action listener that handles timer events.
+     */
+    public static void initializeTimer(int delay, boolean isRepeating, ActionListener listener) {
+        if (timer != null) {
+            timer.stop();
+        }
+        timer = new Timer(delay, listener);
+        timer.setRepeats(isRepeating);
+        timer.setCoalesce(true);
+    }
+
+    /**
+     * Starts the timer if it has been initialized.
+     * If the timer is not initialized, an error message is printed to the error stream.
+     */
+    public static void startTimer() {
+        if (timer == null) {
+            System.err.println("Error: Cannot start timer. It is not initialized.");
+            return;
+        }
+        timer.start();
+    }
+
+    /**
+     * Stops the timer if it is running.
+     * If the timer is not initialized, an error message is printed to the error stream.
+     */
+    public static void stopTimer() {
+        if (timer == null) {
+            System.err.println("Error: Cannot stop timer. It is not initialized.");
+            return;
+        }
+        timer.stop();
+    }
+
+    /**
+     * Checks if the timer is currently running.
+     * If the timer is not initialized, a warning message is printed.
+     *
+     * @return {@code true} if the timer is running, {@code false} otherwise.
+     */
+    public static boolean isAlive() {
+        if (timer == null) {
+            System.err.println("Warning: Timer is not initialized.");
+            return false;
+        }
+        return timer.isRunning();
+    }
+
+    /**
+     * Checks if the timer is coalescing events.
+     * Coalescing means that multiple pending timer events are merged into a single event
+     * to prevent event flooding.
+     * If the timer is not initialized, a warning message is printed.
+     *
+     * @return {@code true} if the timer is coalescing events, {@code false} otherwise.
+     */
+    public static boolean isCoalescing() {
+        if (timer == null) {
+            System.err.println("Warning: Timer is not initialized.");
+            return false;
+        }
+        return timer.isCoalesce();
     }
 
     /**
