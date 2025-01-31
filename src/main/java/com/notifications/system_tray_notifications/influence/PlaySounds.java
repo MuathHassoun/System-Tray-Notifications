@@ -1,7 +1,10 @@
 package com.notifications.system_tray_notifications.influence;
+import com.notifications.system_tray_notifications.basics.AlarmSounds;
+
 import static com.notifications.system_tray_notifications.influence.DisplayMessages.printErrorMessage;
 
 import javax.sound.sampled.*;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,7 +31,8 @@ public class PlaySounds {
             if (audioSrc == null) {
                 throw new IllegalArgumentException("File not found: " + fileName);
             }
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioSrc);
+            BufferedInputStream bufferedIn = new BufferedInputStream(audioSrc);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
 
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);

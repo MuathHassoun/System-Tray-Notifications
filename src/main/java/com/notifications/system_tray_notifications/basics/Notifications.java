@@ -1,13 +1,13 @@
 package com.notifications.system_tray_notifications.basics;
 
 /**
- * The {@code notifications} class represents a system tray notification configuration.
+ * The {@code Notifications} class represents a system tray notification configuration.
  * It includes properties such as the application title, icon path, alarm title,
  * alarm message, notification duration, and whether the notification repeats.
  *
  * @author Muath Hassoun
  */
-public class notifications {
+public class Notifications {
 	private String appTitle;
 	private String iconPath;
 	private String alarmTitle;
@@ -25,7 +25,7 @@ public class notifications {
 	 * @param duration     The duration (in seconds) the notification will be displayed.
 	 * @param isRepeating  A flag indicating whether the notification should repeat.
 	 */
-	public notifications(
+	public Notifications(
 			String AppTitle, String IconPath,
 			String AlarmTitle, String AlarmMessage,
 			int duration, boolean isRepeating

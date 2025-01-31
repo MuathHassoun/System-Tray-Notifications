@@ -2,7 +2,7 @@ package com.notifications.system_tray_notifications.system_tray;
 import static com.notifications.system_tray_notifications.influence.DisplayMessages.printErrorMessage;
 
 import com.notifications.system_tray_notifications.basics.AlarmSounds;
-import com.notifications.system_tray_notifications.basics.notifications;
+import com.notifications.system_tray_notifications.basics.Notifications;
 import com.notifications.system_tray_notifications.influence.PlaySounds;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
@@ -46,7 +46,7 @@ public class SystemTrayNotification{
      * @param notification_object An object of the `notifications` class containing the notification details
      * @param alarm_object An object of the `AlarmSounds` class for sound handling
      */
-    public void CreateTrayIcon(notifications notification_object, AlarmSounds alarm_object){
+    public void CreateTrayIcon(Notifications notification_object, AlarmSounds alarm_object){
         if (!SystemTray.isSupported()) {
             System.out.println("SystemTray is not supported on this platform.");
             return;
@@ -110,7 +110,6 @@ public class SystemTrayNotification{
         e -> {
             PlaySounds.playSound(alarm_object.getSoundFileName());
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
-            System.out.println("End...");
         });
         timer.setRepeats(isRepeating);
         timer.start();
