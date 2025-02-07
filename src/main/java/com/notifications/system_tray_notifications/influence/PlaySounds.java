@@ -1,6 +1,4 @@
 package com.notifications.system_tray_notifications.influence;
-import com.notifications.system_tray_notifications.basics.AlarmSounds;
-
 import static com.notifications.system_tray_notifications.influence.DisplayMessages.printErrorMessage;
 
 import javax.sound.sampled.*;
@@ -18,9 +16,9 @@ import java.io.InputStream;
 public class PlaySounds {
 
     /**
-     * Plays a sound file from the resources folder.
+     * Plays a sound file from the resources' folder.
      *
-     * @param fileName The name of the sound file in the resources folder.
+     * @param fileName The name of the sound file in the resources' folder.
      *                 The file should be located under the "/Alarm-Sounds/" directory.
      *
      * @throws IllegalArgumentException If the specified file cannot be found.

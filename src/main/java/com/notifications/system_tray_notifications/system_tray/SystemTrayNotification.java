@@ -4,7 +4,6 @@ import static com.notifications.system_tray_notifications.influence.DisplayMessa
 import com.notifications.system_tray_notifications.basics.AlarmSounds;
 import com.notifications.system_tray_notifications.basics.Notifications;
 import com.notifications.system_tray_notifications.influence.PlaySounds;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -57,7 +56,6 @@ public class SystemTrayNotification{
             System.out.println("SystemTray is not supported on this platform.");
             return;
         }
-        FlatMacLightLaf.setup();
         SystemTray systemTray = SystemTray.getSystemTray();
         Image iconImage = Toolkit.getDefaultToolkit().getImage(notification_object.getIconPath());
 
