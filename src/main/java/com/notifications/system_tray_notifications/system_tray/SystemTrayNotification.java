@@ -1,6 +1,5 @@
 package com.notifications.system_tray_notifications.system_tray;
 import static com.notifications.system_tray_notifications.influence.DisplayMessages.printErrorMessage;
-
 import com.notifications.system_tray_notifications.basics.AlarmSounds;
 import com.notifications.system_tray_notifications.basics.Notifications;
 import com.notifications.system_tray_notifications.influence.PlaySounds;
@@ -57,12 +56,12 @@ public class SystemTrayNotification{
             return;
         }
         SystemTray systemTray = SystemTray.getSystemTray();
-        Image iconImage = Toolkit.getDefaultToolkit().getImage(notification_object.getIconPath());
-
+        Image iconImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/icon/icon.png"));
+        
         trayIcon = new TrayIcon(iconImage, notification_object.getAppTitle());
         trayIcon.setPopupMenu(createPopupMenu());
         trayIcon.addActionListener(
-                e -> {
+		        _ -> {
                     message = notification_object.getAlarmMessage();
                     showDialog(
                             notification_object.getAlarmTitle()
@@ -84,21 +83,64 @@ public class SystemTrayNotification{
             printErrorMessage(e);
         }
     }
-
+    
     /**
-     * Creates a popup menu for the system tray icon.
-     * Adds an option to stop the program.
+     * Creates and returns a fully configured popup menu for the system tray icon.
+     * <p>
+     * The menu includes the following options:
+     * <ul>
+     *     <li><b>Hide Icon:</b> Removes the tray icon from the system tray.</li>
+     *     <li><b>Mute Sound:</b> Stops the alarm timer and disables sound temporarily.</li>
+     *     <li><b>Restart Timer:</b> Restarts the alarm timer to resume notifications.</li>
+     *     <li><b>About:</b> Displays an informational dialog about the application.</li>
+     *     <li><b>Exit:</b> Terminates the application immediately.</li>
+     * </ul>
+     * <p>
+     * This menu enhances user interaction by allowing control over the tray behavior,
+     * sound settings, and access to basic application information.
      *
-     * @return A configured PopupMenu for the tray icon
+     * @return A {@code PopupMenu} object with predefined tray actions.
      */
     private static PopupMenu createPopupMenu() {
-    	PopupMenu popup = new PopupMenu();
-        MenuItem stopItem = new MenuItem("Stop Program");
-        stopItem.addActionListener(e -> System.exit(0));
-        popup.add(stopItem);
+        PopupMenu popup = new PopupMenu();
+        
+        MenuItem hideIconItem = new MenuItem("Hide Icon");
+        hideIconItem.addActionListener(_ -> {
+            SystemTray.getSystemTray().remove(trayIcon);
+        });
+        
+        MenuItem aboutItem = new MenuItem("About");
+        aboutItem.addActionListener(_ -> {
+            JOptionPane.showMessageDialog(null,
+                    "Notification System\nVersion 1.0\nDeveloped by Muath Hassoun",
+                    "About", JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        MenuItem muteItem = new MenuItem("Mute Sound");
+        muteItem.addActionListener(_ -> {
+            stopTimer();
+            trayIcon.displayMessage("Muted", "Alarm sound has been muted.", TrayIcon.MessageType.INFO);
+        });
+        
+        MenuItem restartTimerItem = new MenuItem("Restart Timer");
+        restartTimerItem.addActionListener(_ -> {
+            startTimer();
+            trayIcon.displayMessage("Timer Restarted", "Alarm timer is running again.", TrayIcon.MessageType.INFO);
+        });
+        
+        MenuItem exitItem = new MenuItem("Stop Program");
+        exitItem.addActionListener(_ -> System.exit(0));
+        
+        popup.add(hideIconItem);
+        popup.add(muteItem);
+        popup.add(restartTimerItem);
+        popup.addSeparator();
+        popup.add(aboutItem);
+        popup.addSeparator();
+        popup.add(exitItem);
         return popup;
     }
-
+    
     /**
      * Configures the system tray icon to display notifications.
      * The notification can optionally repeat based on the specified duration.
@@ -110,8 +152,7 @@ public class SystemTrayNotification{
      * @param isRepeating A boolean value indicating whether the notification should repeat
      */
     private static void setupSystemTray(AlarmSounds alarm_object, String title, String message, int duration, boolean isRepeating) {
-        timer = new Timer(duration,
-        e -> {
+        timer = new Timer(duration, _ -> {
             PlaySounds.playSound(alarm_object.getSoundFileName());
             trayIcon.displayMessage(title, message, TrayIcon.MessageType.INFO);
         });
