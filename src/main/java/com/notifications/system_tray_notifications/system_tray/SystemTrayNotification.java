@@ -6,6 +6,8 @@ import com.notifications.system_tray_notifications.influence.PlaySounds;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.Timer;
 
@@ -42,44 +44,59 @@ public class SystemTrayNotification{
      * The Swing Timer instance.
      */
     private static Timer timer;
-
+    
     /**
-     * Initializes and displays a system tray notification with customizable options.
-     * When the tray icon is clicked, it will decide whether to show a dialog with a message or a JPanel.
+     * Initializes and displays a system tray notification with a custom icon, sound, and message behavior.
+     * <p>
+     * This method performs the following actions:
+     * <ul>
+     *   <li>Loads a PNG icon from the application resources ({@code /icon/icon.png}).</li>
+     *   <li>Creates a {@link TrayIcon} with the loaded image and application title.</li>
+     *   <li>Associates a custom popup menu with various tray actions (hide, mute, restart, about, exit).</li>
+     *   <li>Handles click events on the tray icon to show either a message or a {@code JPanel}.</li>
+     *   <li>Sets up a repeating or one-time alarm notification with sound and message display.</li>
+     * </ul>
+     * <p>
+     * If the platform does not support system tray notifications, or if the icon resource fails to load,
+     * the method exits silently. Exceptions during execution are printed using the {@code printErrorMessage} utility.
      *
-     * @param notification_object An object of the `notifications` class containing the notification details
-     * @param alarm_object An object of the `AlarmSounds` class for sound handling
+     * @param notification_object an instance of {@link Notifications} containing title, message, icon path, and settings
+     * @param alarm_object        an instance of {@link AlarmSounds} for retrieving and managing the alarm sound
      */
-    public void CreateTrayIcon(Notifications notification_object, AlarmSounds alarm_object){
-        if (!SystemTray.isSupported()) {
-            System.out.println("SystemTray is not supported on this platform.");
-            return;
-        }
-        SystemTray systemTray = SystemTray.getSystemTray();
-        Image iconImage = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/icon/icon.png"));
-        
-        trayIcon = new TrayIcon(iconImage, notification_object.getAppTitle());
-        trayIcon.setPopupMenu(createPopupMenu());
-        trayIcon.addActionListener(
-		        _ -> {
-                    message = notification_object.getAlarmMessage();
-                    showDialog(
-                            notification_object.getAlarmTitle()
-                    );
-                }
-        );
-
-        setupSystemTray(
-                alarm_object,
-                notification_object.getAlarmTitle(),
-                notification_object.getAlarmMessage(),
-                notification_object.getDuration(),
-                notification_object.getIsRepeating()
-        );
-        
+    public void CreateTrayIcon(Notifications notification_object, AlarmSounds alarm_object) {
         try {
-            systemTray.add(trayIcon);
-        } catch (AWTException e) {
+            if (!SystemTray.isSupported()) {
+                System.out.println("SystemTray is not supported on this platform.");
+                return;
+            }
+            SystemTray systemTray = SystemTray.getSystemTray();
+            InputStream is = SystemTrayNotification.class.getResourceAsStream("/icon/icon.png");
+            if (is == null) return;
+            java.awt.Image image = ImageIO.read(is);
+            
+            trayIcon = new TrayIcon(image, notification_object.getAppTitle());
+            trayIcon.setPopupMenu(createPopupMenu());
+            trayIcon.addActionListener(
+                    _ -> {
+                        message = notification_object.getAlarmMessage();
+                        showDialog(notification_object.getAlarmTitle());
+                    }
+            );
+            
+            setupSystemTray(
+                    alarm_object,
+                    notification_object.getAlarmTitle(),
+                    notification_object.getAlarmMessage(),
+                    notification_object.getDuration(),
+                    notification_object.getIsRepeating()
+            );
+            
+            try {
+                systemTray.add(trayIcon);
+            } catch (AWTException e) {
+                printErrorMessage(e);
+            }
+        } catch (Exception e) {
             printErrorMessage(e);
         }
     }
@@ -162,7 +179,7 @@ public class SystemTrayNotification{
 
     /**
      * Initializes the timer with a given delay, repetition mode, and action listener.
-     * If the timer is already initialized, it stops and reinitialized it.
+     * If the timer is already initialized, it stops and reinitializes it.
      *
      * @param delay        The delay in milliseconds between action events.
      * @param isRepeating  {@code true} if the timer should repeat, {@code false} if it should fire only once.
