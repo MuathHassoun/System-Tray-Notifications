@@ -21,24 +21,24 @@ public class SystemTrayNotification{
     /**
      * Flag to determine if a JPanel should be shown in the dialog
       */
-    private boolean isToShowA$Panel = false;
+    private static boolean isToShowA$Panel = false;
 
     /**
      * Message to be displayed if a JPanel is not shown
      */
-    private String message = "Alarm!";
+    private static String message = "Alarm!";
 
     /**
      * JPanel to be displayed in the dialog if enabled
      */
-    private JPanel panel = new JPanel();
+    private static JPanel panel = new JPanel();
 
     /**
      * The TrayIcon object that represents the icon displayed in the system tray.
      * This icon is used to trigger notifications and handle user interactions (e.g., clicks).
      * It is initialized in the `Tray` method and is used to display notifications and the associated popup menu.
      */
-    private static TrayIcon trayIcon;
+    public static TrayIcon trayIcon;
 
     /**
      * The Swing Timer instance.
@@ -46,35 +46,80 @@ public class SystemTrayNotification{
     private static Timer timer;
     
     /**
-     * Initializes and displays a system tray notification with a custom icon, sound, and message behavior.
+     * Indicates whether the tray icon should be automatically removed after the alert is shown.
      * <p>
-     * This method performs the following actions:
+     * If set to {@code true}, the icon will be removed from the system tray once the alarm
+     * or notification is displayed. This is useful for one-time alerts or temporary notifications.
+     * If {@code false}, the icon remains in the tray until manually removed, or the application exits.
+     */
+    public static boolean removeIconAfterAlert = true;
+    
+    /**
+     * A reference to the system's {@link SystemTray} instance.
+     * <p>
+     * This field holds the active system tray used for adding or removing {@link TrayIcon} instances.
+     * It is initialized when the {@code CreateTrayIcon} method is called, if the platform
+     * supports system tray functionality.
+     */
+    public static SystemTray systemTray;
+    
+    /**
+     * Initializes and displays a system tray notification with a custom or default icon,
+     * alarm sound, message behavior, and optional taskbar integration.
+     * <p>
+     * This method performs the following operations:
      * <ul>
-     *   <li>Loads a PNG icon from the application resources ({@code /icon/icon.png}).</li>
-     *   <li>Creates a {@link TrayIcon} with the loaded image and application title.</li>
-     *   <li>Associates a custom popup menu with various tray actions (hide, mute, restart, about, exit).</li>
-     *   <li>Handles click events on the tray icon to show either a message or a {@code JPanel}.</li>
-     *   <li>Sets up a repeating or one-time alarm notification with sound and message display.</li>
+     *   <li>Checks if the system tray is supported on the current platform.</li>
+     *   <li>Loads a default PNG icon from the application resources at {@code /Icon_STN/icon.png}.</li>
+     *   <li>Uses a provided custom icon if {@code useDefaultIcon} is
+     *   {@code false} and {@code trayAlertIcon} is not {@code null};
+     *   otherwise, uses the default icon.</li>
+     *   <li>Creates a {@link TrayIcon} with the chosen icon and application title.</li>
+     *   <li>Associates a popup menu with the tray icon that includes options such as hide,
+     *   mute, restart, about, and exit.</li>
+     *   <li>Handles click events on the tray icon to display a dialog with the notification message.</li>
+     *   <li>Configures and triggers a system tray notification with a sound alert and custom duration,
+     *   optionally repeating.</li>
+     *   <li>If {@code addTrayToTaskBar} is {@code true}, the tray icon is added to the system taskbar.</li>
+     *   <li>If {@code removeIconAfterAlert} is {@code true},
+     *   the tray icon is removed from the system tray after the alert is shown.</li>
      * </ul>
      * <p>
-     * If the platform does not support system tray notifications, or if the icon resource fails to load,
-     * the method exits silently. Exceptions during execution are printed using the {@code printErrorMessage} utility.
+     * If the platform does not support system tray notifications or the icon resource cannot be loaded,
+     * the method exits silently.
+     * Any exceptions are printed using the {@code printErrorMessage} utility.
      *
-     * @param notification_object an instance of {@link Notifications} containing title, message, icon path, and settings
-     * @param alarm_object        an instance of {@link AlarmSounds} for retrieving and managing the alarm sound
+     * @param notification_object     an instance of {@link Notifications} containing the title, message, duration, repeat status, and app settings
+     * @param alarm_object            an instance of {@link AlarmSounds} used to retrieve and manage the alarm sound
+     * @param trayAlertIcon           a custom icon image to be used in the tray (if {@code useDefaultIcon} is {@code false})
+     * @param useDefaultIcon          if {@code true}, the default internal icon is used; otherwise,
+     *                                the provided {@code trayAlertIcon} is used if available
+     * @param addTrayToTaskBar        if {@code true}, the tray icon is added to the system taskbar
+     * @param removeIconAfterAlert    if {@code true}, the tray icon is automatically removed after the alert is triggered
      */
-    public void CreateTrayIcon(Notifications notification_object, AlarmSounds alarm_object) {
+    public static void CreateTrayIcon(
+		    Notifications notification_object, AlarmSounds alarm_object,
+		    java.awt.Image trayAlertIcon, boolean useDefaultIcon,
+		    boolean addTrayToTaskBar, boolean removeIconAfterAlert
+    ) {
         try {
+            SystemTrayNotification.removeIconAfterAlert = removeIconAfterAlert;
             if (!SystemTray.isSupported()) {
-                System.out.println("SystemTray is not supported on this platform.");
+                System.err.println("SystemTray is not supported on this platform.");
                 return;
             }
-            SystemTray systemTray = SystemTray.getSystemTray();
-            InputStream is = SystemTrayNotification.class.getResourceAsStream("/icon/icon.png");
+            systemTray = SystemTray.getSystemTray();
+            InputStream is = SystemTrayNotification.class.getResourceAsStream("/Icon_STN/icon.png");
             if (is == null) return;
-            java.awt.Image image = ImageIO.read(is);
+            Image image = ImageIO.read(is);
+            if (image == null) return;
             
-            trayIcon = new TrayIcon(image, notification_object.getAppTitle());
+            if(!useDefaultIcon && trayAlertIcon != null) {
+                trayIcon = new TrayIcon(trayAlertIcon, notification_object.getAppTitle());
+            } else {
+                trayIcon = new TrayIcon(image, notification_object.getAppTitle());
+            }
+            trayIcon.setImageAutoSize(true);
             trayIcon.setPopupMenu(createPopupMenu());
             trayIcon.addActionListener(
                     _ -> {
@@ -91,10 +136,12 @@ public class SystemTrayNotification{
                     notification_object.getIsRepeating()
             );
             
-            try {
-                systemTray.add(trayIcon);
-            } catch (AWTException e) {
-                printErrorMessage(e);
+            if(addTrayToTaskBar) {
+                try {
+                    systemTray.add(trayIcon);
+                } catch (AWTException e) {
+                    printErrorMessage(e);
+                }
             }
         } catch (Exception e) {
             printErrorMessage(e);
@@ -254,11 +301,11 @@ public class SystemTrayNotification{
      *
      * @param title The title for the message dialog
      */
-    private void showDialog(String title) {
+    private static void showDialog(String title) {
         if(isToShowA$Panel){
-            JOptionPane.showMessageDialog(null, this.panel, title, JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, SystemTrayNotification.panel, title, JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(null, this.message, title, JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, SystemTrayNotification.message, title, JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -268,7 +315,7 @@ public class SystemTrayNotification{
      * @param isToShowPanel A boolean value indicating whether to show a JPanel
      */
     public void setIsToShowPanel(boolean isToShowPanel){
-        this.isToShowA$Panel = isToShowPanel;
+        SystemTrayNotification.isToShowA$Panel = isToShowPanel;
     }
 
     /**
@@ -277,6 +324,6 @@ public class SystemTrayNotification{
      * @param panel The JPanel to be displayed
      */
     public void setPanel(JPanel panel){
-        this.panel = panel;
+        SystemTrayNotification.panel = panel;
     }
 }

@@ -1,5 +1,6 @@
 package com.notifications.system_tray_notifications.influence;
 import static com.notifications.system_tray_notifications.influence.DisplayMessages.printErrorMessage;
+import static com.notifications.system_tray_notifications.system_tray.SystemTrayNotification.*;
 
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
@@ -10,11 +11,14 @@ import java.io.InputStream;
  * The {@code PlaySounds} class provides functionality to play sound files
  * from the resources folder. It uses the Java Sound API to handle audio streams
  * and playback.
+ * <p>
+ * After the sound finishes playing, the tray icon is removed if
+ * {@code removeIconAfterAlert} is set to true.
  *
  * @author Muath Hassoun
  */
 public class PlaySounds {
-
+    
     /**
      * Plays a sound file from the resources' folder.
      *
@@ -35,6 +39,18 @@ public class PlaySounds {
             Clip clip = AudioSystem.getClip();
             clip.open(audioStream);
             clip.start();
+            clip.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    clip.close();
+                    if (removeIconAfterAlert && systemTray != null && trayIcon != null) {
+                        try {
+                            systemTray.remove(trayIcon);
+                        } catch (Exception e) {
+                            printErrorMessage(e);
+                        }
+                    }
+                }
+            });
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
             printErrorMessage(e);
         }
