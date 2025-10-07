@@ -2,7 +2,7 @@
 
 System Tray Notifications
 
-A program to display notifications on your computer using the notification icon in the operating system. The program allows you to send interactive notifications easily through the system tray icons.
+A library to display notifications on your computer using the notification icon in the operating system. The program allows you to send interactive notifications easily through the system tray icons.
 
 Features:
 
